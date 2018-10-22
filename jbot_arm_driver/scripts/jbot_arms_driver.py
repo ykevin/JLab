@@ -19,6 +19,16 @@ SLIDER_DOWN = 1003
 
 class JBotArmsDriver(object):
     def __init__(self):
+
+        self.btSelectBefore = 0
+        self.flagRightArm = True
+        self.btGripperBefore = 0  # open
+        self.flagGripperOpen = True
+        self.btSliderBefore = 0  # mode joint, not slider
+        self.flagSliderMode = False
+
+        self.mode = MODE_JOINT
+
         rospy.init_node("Xbot_Robot_Arms_Driver")
 
         rospy.Subscriber("/joy", Joy, self.joy_callback)
@@ -29,16 +39,15 @@ class JBotArmsDriver(object):
         self.rate = 20
 
         self.controller_left = JBotArmsController(
-            port='/dev/ttyUSB_left_arm', joint_names=JOINT_NAMES_LEFT, gripper_topic='/cmd_gripper_left')
+            port='/dev/ttyUSB1', joint_names=JOINT_NAMES_LEFT, gripper_topic='/cmd_gripper_left')
         self.controller_left.thread_joint_state_req.start()
         self.controller_left.thread_receive.start()
 
         self.controller_right = JBotArmsController(
-            port='/dev/ttyUSB_right_arm', joint_names=JOINT_NAMES, gripper_topic='/cmd_gripper')
+            port='/dev/ttyUSB0', joint_names=JOINT_NAMES, gripper_topic='/cmd_gripper')
         self.controller_right.thread_joint_state_req.start()
         self.controller_right.thread_receive.start()
 
-        self.mode = MODE_JOINT
         self.slider_state = SLIDER_STOP
         self.__pub_slider_states = rospy.Publisher('/slider_states', Int16, queue_size=3)
         rospy.loginfo("Started arm driver")
@@ -51,12 +60,6 @@ class JBotArmsDriver(object):
         self.controller.cmd_control_arm_target_index_position(1)
         self.controller_left.cmd_control_arm_target_index_position(1)
 
-        self.btSelectBefore = 0
-        self.flagRightArm = True
-        self.btGripperBefore = 0  # open
-        self.flagGripperOpen = True
-        self.btSliderBefore = 0  # mode joint, not slider
-        self.flagSliderMode = False
 
         # for t in range(0, 1):
         #     self.controller.cmd_control_arm_target_index_position(1)
@@ -87,9 +90,11 @@ class JBotArmsDriver(object):
             if self.flagRightArm:
                 self.controller = self.controller_left
                 self.flagRightArm = False
+		print("left arm ..............")
             else:
                 self.controller = self.controller_right
                 self.flagRightArm = True
+		print("right arm ..............")
         self.btSelectBefore = data.buttons[0]  # update the button before
 
         # gripper

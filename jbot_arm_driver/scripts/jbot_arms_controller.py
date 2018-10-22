@@ -15,7 +15,7 @@ req_time_duration = 0.2  # 0.2  # 0.03
 
 
 class JBotArmsController(object):
-    def __init__(self, port='/dev/ttyUSB_right_arm', joint_names=[], gripper_topic='/cmd_gripper'):
+    def __init__(self, port='/dev/ttyUSB0', joint_names=[], gripper_topic='/cmd_gripper'):
 
         self._joint_names = joint_names
         self._gripper_topic = gripper_topic
@@ -258,12 +258,12 @@ if __name__ == '__main__':
     rospy.init_node("JBot_Arms_Controller")
     try:
         _hrg_controller = JBotArmsController(
-            port='/dev/ttyUSB_left_arm', joint_names=JOINT_NAMES, gripper_topic='cmd_gripper')
+            port='/dev/ttyUSB1', joint_names=JOINT_NAMES, gripper_topic='cmd_gripper')
         _hrg_controller.thread_joint_state_req.start()
         _hrg_controller.thread_receive.start()
 
         _hrg_controller_left = JBotArmsController(
-            port='/dev/ttyUSB_right_arm', joint_names=JOINT_NAMES_LEFT, gripper_topic='cmd_gripper_left')
+            port='/dev/ttyUSB0', joint_names=JOINT_NAMES_LEFT, gripper_topic='cmd_gripper_left')
         _hrg_controller_left.thread_joint_state_req.start()
         _hrg_controller_left.thread_receive.start()
 
