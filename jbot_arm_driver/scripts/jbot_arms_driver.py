@@ -150,7 +150,7 @@ class JBotArmsDriver(object):
 
         # print("self.is_change :"+str(self.is_change))
         '''
-
+       
         scal_vertical = data.axes[3]
         if self.mode == MODE_JOINT:  # control joint
             if scal_vertical > 0.5:

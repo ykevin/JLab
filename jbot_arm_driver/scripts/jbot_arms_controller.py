@@ -143,6 +143,7 @@ class JBotArmsController(object):
                 return
             position = (position/PI * 1000.0) + 500  # from rad to servor joint
             position = int(position)
+            print('---------position: ', position)
 
             joint_num = 6 - joint_num  # moveit joint 2-6  -> servor id 4-0
 
@@ -152,7 +153,7 @@ class JBotArmsController(object):
 
         servo_num = len(joint_nums)
         bytes_num = servo_num * 3 + 5
-        time_ms = 1000
+        time_ms = 800
         byte_com2 = struct.pack('<BBBBBH', 85, 85, bytes_num, 3, servo_num, time_ms)
 
         com = byte_com2 + byte_com
