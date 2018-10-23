@@ -116,41 +116,14 @@ class JBotArmsDriver(object):
                 self.mode = MODE_SLIDER
                 self.flagSliderMode = True
         self.btSliderBefore = data.buttons[3]
+        
+        if data.buttons[8] == 1 :
+	    for joint in range(0, 5):
+                if data.axes[joint] != 0:
+	            print(joint)
+                    self.controller.cmd_control_one_joint(joint, data.axes[joint])
 
-        '''
-        self.current = rospy.get_rostime()
-        if (self.current - self.last).to_sec() > 0.5:
-            self.is_change = False
-            self.last = self.current
-
-        if not self.is_change:
-            if data.buttons[0] == 1:  # button 0, change the arm
-                self.leftOrRight += 1
-                if self.leftOrRight % 2 == 0:
-                    self.controller = self.controller_right
-                else:
-                    self.controller = self.controller_left
-                self.is_change = True
-
-            if data.buttons[9] == 1:  # button 9, gripper action
-                # print "button 9 is pressed"
-                if not self.is_change:
-                    # print("will start gripper")
-                    self.controller.gripper_control(self.open)
-                    self.open += 1
-                    self.is_change = True
-
-            if data.buttons[3] == 1:  # start button, change the Mode
-                if not self.is_change:
-                    if self.mode == MODE_JOINT:
-                        self.mode = MODE_SLIDER
-                    else:
-                        self.mode = MODE_JOINT
-                    self.is_change = True
-
-        # print("self.is_change :"+str(self.is_change))
-        '''
-
+	'''
         scal_vertical = data.axes[3]
         if self.mode == MODE_JOINT:  # control joint
             if scal_vertical > 0.5:
@@ -176,6 +149,8 @@ class JBotArmsDriver(object):
             else:
                 self.slider_state = SLIDER_STOP
             self.__pub_slider_states.publish(self.slider_state)
+            #print('slider_state', self.slider_state)
+         '''
 
     def actionCb_right(self, goal):
         traj = goal.trajectory
@@ -214,6 +189,7 @@ class JBotArmsDriver(object):
 
         # for point in traj.points:
         for point in pp:
+            print('right position: ', point.positions)
             positions = point.positions
             re = self.controller_right.cmd_control_arm_trajectory(positions)
             if re == 0:
@@ -242,6 +218,7 @@ class JBotArmsDriver(object):
         # for point in traj.points:
         for point in pp:
             positions = point.positions
+            print('left position: ', point.positions)
             re = self.controller_left.cmd_control_arm_trajectory(positions)
             if re == 0:
                 self.server_left.set_aborted(text='Something wrong with robot excute')

@@ -24,6 +24,7 @@ class JBotArmsController(object):
         self.__ser.bytesize = 8
         self.__ser.parity = serial.PARITY_NONE
         self.__ser.stopbits = 1
+        self.last_pos = 0
         if self.__ser.isOpen():
             self.__ser.close()
         try:
@@ -72,8 +73,8 @@ class JBotArmsController(object):
 
     # moveit driver interface
     def cmd_control_arm_trajectory(self, ppositions=[]):
-        # time_ms = 500
-        time_ms = 3500
+        time_ms = 500
+        #time_ms = 3500
         byte_com2 = struct.pack('<BBBBBH', 85, 85, 20, 3, 5, time_ms)
         byte_com = ''
         joint_nums = [0, 1, 2, 3, 4]
@@ -112,9 +113,12 @@ class JBotArmsController(object):
         # rospy.sleep(time_ms/1000.0 + 0.05)
         return 1
 
-    def cmd_control_one_joint(self, index, method):
+    #def cmd_control_one_joint(self, index, method):
+    def cmd_control_one_joint(self, index, pos):
+        #print('method: ', method)
         joint_nums = [index]
         position_joint = self.joint_states.position[index]
+        print('position_joint', position_joint)
         if index == 0:
             if position_joint > PI or position_joint < -PI:
                 print 'Target position args wrong! {0} {1}'.format(str(index), str(position_joint))
@@ -126,11 +130,11 @@ class JBotArmsController(object):
         else:
             print('index out of 5 {0}'.format(str(index)))
             return
-        if method % 2 == 0:
-            position_joint += 0.1  # add 0.1rad per time
-        else:
-            position_joint -= 0.1
-        pposition = [position_joint]
+        #if method % 2 == 0:
+        #    position_joint += 0.1  # add 0.1rad per time
+        #else:
+        #    position_joint -= 0.1
+        pposition = [pos]
         self.cmd_control_arm_target_positions(joint_nums, pposition)
 
     # moveit driver interface
@@ -138,11 +142,17 @@ class JBotArmsController(object):
         byte_com = ''
         for (joint_num, position) in zip(joint_nums, ppositions):
             print 'joint_num: {0}  position: {1}'.format(str(joint_num), str(position))
-            if position > (PI/2 + 0.05) or position < (-PI/2 - 0.05) or joint_num > 5:
+            if joint_num > 5:
                 print 'Target position args wrong! {0} {1}'.format(str(joint_num), str(position))
                 return
-            position = (position/PI * 1000.0) + 500  # from rad to servor joint
-            position = int(position)
+            position = position * 100  # from rad to servor joint
+            position =  self.last_pos + int(position)
+            self.last_pos = position
+            if(position > 1000):
+	        position = 1000
+            if(position < 0):
+                position = 0
+            print("arm pos------------:", position)
 
             joint_num = 6 - joint_num  # moveit joint 2-6  -> servor id 4-0
 
@@ -158,7 +168,7 @@ class JBotArmsController(object):
         com = byte_com2 + byte_com
 
         data = bytes(com)
-        # print(repr(data))
+        print(repr(data))
         self.__flag.clear()
         rospy.sleep(0.2)
         self.__ser.write(data)
@@ -177,7 +187,7 @@ class JBotArmsController(object):
             data = b"\x55\x55\x08\x03\x01\x88\x13\x04\xc8\x00"
         elif index == 4:
             data = b"\x55\x55\x08\x03\x01\x88\x13\x05\xc8\x00"
-        # print(repr(data))
+        print(repr(data))
 
         self.__ser.write(data)
         self.__flag.set()
@@ -272,6 +282,7 @@ if __name__ == '__main__':
 
         for t in range(0, 3):
             for i in range(1, 5, 1):
+                print('init :', i)
                 _hrg_controller.cmd_control_arm_target_index_position(i)
                 rospy.sleep(8)
                 _hrg_controller_left.cmd_control_arm_target_index_position(i)
